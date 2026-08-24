@@ -28,7 +28,7 @@ export default function UserProfile() {
     console.log("ACCESS TOKEN:", session.access_token);
     console.log("Google provider_token получен");
 
-    const response = await fetch(`http://localhost:5000/api/calendar/events`, {
+    const response = await fetch(`${API_URL}/api/calendar/events`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${session.access_token}`,
@@ -100,7 +100,7 @@ export default function UserProfile() {
       return;
     }
 
-    const response = await fetch(`http://localhost:5000/api/calendar/events`, {
+    const response = await fetch(`${API_URL}/api/calendar/events`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${session.access_token}`,
