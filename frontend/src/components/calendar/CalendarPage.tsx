@@ -353,7 +353,7 @@ if (!response.ok) {
       }
 
   const response = await fetch(
-  `http://localhost:5000/api/calendar/events/${encodeURIComponent(
+  `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events/${encodeURIComponent(
     selectedEvent.id,
   )}`,
   {
