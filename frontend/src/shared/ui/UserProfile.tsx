@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
+if (!API_URL) {
+  console.error("NEXT_PUBLIC_API_URL is not defined");
+}
 export default function UserProfile() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function UserProfile() {
     console.log("Calendar events:", data);
   };
 
-  useEffect(() => {
+   useEffect(() => {
     const getSession = async () => {
       const { data, error } = await supabase.auth.getSession();
 
@@ -59,8 +61,12 @@ export default function UserProfile() {
         console.log("ACCESS TOKEN:", session.access_token);
         console.log("PROVIDER TOKEN:", session.provider_token);
 
-        await sendTokenToBackend();
-        await getGmailMessages();
+        try {
+          await sendTokenToBackend();
+          await getGmailMessages();
+        } catch (err) {
+          console.error("Backend request failed:", err);
+        }
       }
 
       setLoading(false);
@@ -77,56 +83,64 @@ export default function UserProfile() {
         console.log("ACCESS TOKEN:", session.access_token);
         console.log("PROVIDER TOKEN:", session.provider_token);
 
-        await sendTokenToBackend();
-        await getGmailMessages();
+        try {
+          await sendTokenToBackend();
+          await getGmailMessages();
+        } catch (err) {
+          console.error("Backend request failed:", err);
+        }
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
-  const getGmailMessages = async () => {
-    console.log("GMAIL FUNCTION START");
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+ const getGmailMessages = async () => {
+  console.log("GMAIL FUNCTION START");
 
-    if (!session?.access_token) {
-      console.log("Нет access_token");
-      return;
-    }
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    if (!session.provider_token) {
-      console.log("Нет Google provider_token");
-      return;
-    }
+  if (!session?.access_token) {
+    console.log("Нет access_token");
+    return;
+  }
 
-    const response = await fetch(`${API_URL}/api/calendar/events`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        "X-Google-Provider-Token": session.provider_token,
+  if (!session.provider_token) {
+    console.log("Нет Google provider_token");
+    return;
+  }
+
+  const response = await fetch(`${API_URL}/api/gmail/messages`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "X-Google-Provider-Token": session.provider_token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gmail API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("Gmail messages:", data);
+};
+  const handleGoogleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: [
+          "openid",
+          "email",
+          "profile",
+          "https://www.googleapis.com/auth/gmail.readonly",
+          "https://www.googleapis.com/auth/calendar",
+          "https://www.googleapis.com/auth/drive",
+        ].join(" "),
       },
     });
-
-    const data = await response.json();
-
-    console.log("Gmail messages:", data);
-  };
-  const handleGoogleLogin = async () => {
-   const { data, error } = await supabase.auth.signInWithOAuth({
-  provider: "google",
-  options: {
-    redirectTo: `${window.location.origin}/auth/callback`,
-    scopes: [
-      "openid",
-      "email",
-      "profile",
-      "https://www.googleapis.com/auth/gmail.readonly",
-      "https://www.googleapis.com/auth/calendar",
-      "https://www.googleapis.com/auth/drive"
-    ].join(" "),
-  },
-});
 
     if (error) {
       console.error("Google login error:", error.message);
@@ -150,6 +164,8 @@ export default function UserProfile() {
   if (!user) {
     return <button onClick={handleGoogleLogin}>Continue with Google</button>;
   }
+
+  console.log(user);
 
   const name =
     user.user_metadata?.full_name || user.user_metadata?.name || "User";
