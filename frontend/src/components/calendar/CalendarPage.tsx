@@ -88,7 +88,7 @@ export function CalendarPage() {
     }
 
 const response = await fetch(
-  `http://localhost:5000/api/calendar/events`,
+  `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events`,
   {
     method: "GET",
     headers: {
@@ -220,7 +220,7 @@ const response = await fetch(
         `${newDate}T${newEnd}:00+06:00`;
 
      const response = await fetch(
-  `http://localhost:5000/api/calendar/events`,
+  `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events`,
   {
     method: "POST",
     headers: {
