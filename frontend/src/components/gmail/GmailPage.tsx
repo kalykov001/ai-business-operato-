@@ -36,75 +36,98 @@ export default function GmailPage() {
   // Выбранное письмо
   const [selectedEmail, setSelectedEmail] =
     useState<Email | null>(null);
-  const loadEmails = async (pageNumber: number) => {
-    try {
-      setLoading(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      console.log("SESSION:", session);
-      console.log(
-        "ACCESS TOKEN:",
-        session?.access_token
-      );
-      console.log(
-        "PROVIDER TOKEN:",
-        session?.provider_token
-      );
-      const providerToken = session?.provider_token;
-      if (!providerToken) {
-        console.error(
-          "Google provider token not found"
-        );
-        return;
-      }
-      const token = pageTokens[pageNumber - 1];
-      let url =
-        "http://localhost:5000/api/gmail/messages";
-      if (token) {
-        url += `?pageToken=${encodeURIComponent(
-          token
-        )}`;
-      }
-      const response = await fetch(url, {
-        headers: {
-          "x-google-provider-token":
-            providerToken,
-        },
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          "Gmail API error:",
-          response.status,
-          errorText
-        );
-        throw new Error(
-          `Gmail API error: ${response.status}`
-        );
-      }
-      const data = await response.json();
-      setEmails(data.messages ?? []);
-      setHasNextPage(
-        Boolean(data.nextPageToken)
-      );
-      if (data.nextPageToken) {
-        setPageTokens((prev) => {
-          const newTokens = [...prev];
-          newTokens[pageNumber] =
-            data.nextPageToken;
-          return newTokens;
-        });
-      }
-    } catch (error) {
-      console.error(
-        "Gmail frontend error:",
-        error
-      );
-    } finally {
-      setLoading(false);
+ const loadEmails = async (pageNumber: number) => {
+  try {
+    setLoading(true);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    console.log("SESSION:", session);
+    console.log("ACCESS TOKEN:", session?.access_token);
+    console.log("PROVIDER TOKEN:", session?.provider_token);
+
+    const providerToken = session?.provider_token;
+
+    if (!session?.access_token) {
+      console.error("Supabase access token not found");
+      return;
     }
-  };
+
+    if (!providerToken) {
+      console.error("Google provider token not found");
+      return;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!API_URL) {
+      console.error("NEXT_PUBLIC_API_URL is not defined");
+      return;
+    }
+
+    const token = pageTokens[pageNumber - 1];
+
+    let url = `${API_URL}/api/gmail/messages`;
+
+    if (token) {
+      url += `?pageToken=${encodeURIComponent(token)}`;
+    }
+
+    console.log("Gmail request:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "X-Google-Provider-Token": providerToken,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error(
+        "Gmail API error:",
+        response.status,
+        errorText
+      );
+
+      throw new Error(
+        `Gmail API error: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    console.log("Gmail response:", data);
+
+    setEmails(data.messages ?? []);
+
+    setHasNextPage(
+      Boolean(data.nextPageToken)
+    );
+
+    if (data.nextPageToken) {
+      setPageTokens((prev) => {
+        const newTokens = [...prev];
+
+        newTokens[pageNumber] =
+          data.nextPageToken;
+
+        return newTokens;
+      });
+    }
+  } catch (error) {
+    console.error(
+      "Gmail frontend error:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     loadEmails(1);
   }, []);
