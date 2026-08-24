@@ -150,7 +150,7 @@ const sendMessage = async () => {
 
     // Отправляем сообщение AI
 const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/ai/chat`,
+  `http://localhost:5000/api/ai/chat`,
   {
     method: "POST",
     headers: {
@@ -159,7 +159,7 @@ const response = await fetch(
       "X-Google-Provider-Token": session.provider_token ?? "",
     },
     body: JSON.stringify({
-      message,
+      message: text,
     }),
   }
 );

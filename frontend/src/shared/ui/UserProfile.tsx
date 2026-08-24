@@ -1,133 +1,95 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL) {
-  console.error("NEXT_PUBLIC_API_URL is not defined");
-}
+console.log("UserProfile rendered");
+type User = {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+    picture?: string;
+  };
+};
+
 export default function UserProfile() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Отправляем access_token в Express
-  const sendTokenToBackend = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  useEffect(() => {
+    let mounted = true;
 
-    if (!session?.access_token) {
-      console.log("Нет access_token");
-      return;
-    }
+    // getSession() reads from local storage first — fast, and doesn't
+    // depend on a network round-trip like getUser() does. This avoids
+    // the "flash of logged-out state" while the OAuth redirect settles.
+    const loadSession = async () => {
+      
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+console.log("Session:", session);
+console.log("Session error:", error);
+        if (error) {
+          console.error("Get session error:", error);
+        }
 
-    if (!session.provider_token) {
-      console.log("Нет Google provider_token");
-      return;
-    }
-
-    console.log("ACCESS TOKEN:", session.access_token);
-    console.log("Google provider_token получен");
-
-    const response = await fetch(`${API_URL}/api/calendar/events`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        "X-Google-Provider-Token": session.provider_token,
-      },
-    });
-
-    const data = await response.json();
-
-    console.log("Calendar events:", data);
-  };
-
-   useEffect(() => {
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error("Session error:", error.message);
-        setLoading(false);
-        return;
-      }
-
-      const session = data.session;
-
-      setUser(session?.user ?? null);
-
-      if (session?.access_token) {
-        console.log("ACCESS TOKEN:", session.access_token);
-        console.log("PROVIDER TOKEN:", session.provider_token);
-
-        try {
-          await sendTokenToBackend();
-          await getGmailMessages();
-        } catch (err) {
-          console.error("Backend request failed:", err);
+        if (mounted) {
+          setUser((session?.user as User) ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Session loading error:", error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
         }
       }
-
-      setLoading(false);
     };
 
-    getSession();
+    loadSession();
 
+    // This is the real source of truth: it fires on SIGNED_IN,
+    // SIGNED_OUT, TOKEN_REFRESHED, and once on init after the client
+    // has resolved the session (including right after the OAuth
+    // redirect completes the code exchange).
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-
-      if (session?.access_token) {
-        console.log("ACCESS TOKEN:", session.access_token);
-        console.log("PROVIDER TOKEN:", session.provider_token);
-
-        try {
-          await sendTokenToBackend();
-          await getGmailMessages();
-        } catch (err) {
-          console.error("Backend request failed:", err);
-        }
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setUser((session?.user as User) ?? null);
+      setAvatarError(false);
+      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
- const getGmailMessages = async () => {
-  console.log("GMAIL FUNCTION START");
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // Close the dropdown when clicking outside it.
+  useEffect(() => {
+    if (!open) return;
 
-  if (!session?.access_token) {
-    console.log("Нет access_token");
-    return;
-  }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
 
-  if (!session.provider_token) {
-    console.log("Нет Google provider_token");
-    return;
-  }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
-  const response = await fetch(`${API_URL}/api/gmail/messages`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      "X-Google-Provider-Token": session.provider_token,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Gmail API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  console.log("Gmail messages:", data);
-};
   const handleGoogleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -139,6 +101,10 @@ export default function UserProfile() {
           "https://www.googleapis.com/auth/calendar",
           "https://www.googleapis.com/auth/drive",
         ].join(" "),
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
 
@@ -155,48 +121,74 @@ export default function UserProfile() {
       return;
     }
 
-    setOpen(false);
     setUser(null);
+    setOpen(false);
   };
 
-  if (loading) return null;
-
-  if (!user) {
-    return <button onClick={handleGoogleLogin}>Continue with Google</button>;
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+        <div>
+          <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+          <div className="mt-1 h-2 w-28 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+    );
   }
 
-  console.log(user);
+  if (!user) {
+    return (
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground"
+      >
+        Continue with Google
+      </button>
+    );
+  }
 
   const name =
     user.user_metadata?.full_name || user.user_metadata?.name || "User";
 
+  const email = user.email || "";
+
   const avatar =
-    user.user_metadata?.avatar_url ||
-    user.user_metadata?.picture ||
-    "https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=612x612&w=0&k=20&c=dhV2p1JwmloBTOaG3EZElZ0=";
+    user.user_metadata?.avatar_url || user.user_metadata?.picture || "";
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
-        onClick={() => setOpen(!open)}
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-3"
       >
-        {avatar && (
-          <img src={avatar} alt={name} className="h-8 w-8 rounded-full" />
+        {avatar && !avatarError ? (
+          <img
+            src={avatar}
+            alt={name}
+            className="h-8 w-8 rounded-full object-cover"
+            onError={() => setAvatarError(true)}
+          />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+            {name.charAt(0).toUpperCase()}
+          </div>
         )}
 
         <div className="text-left">
           <h3 className="text-sm font-medium">{name}</h3>
-
-          <p className="text-xs text-gray-500">{user.email}</p>
+          <p className="text-xs text-muted-foreground">{email}</p>
         </div>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-full min-w-[120px] rounded-lg border bg-background p-1 text-foreground shadow-md">
+        <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border bg-background p-1 shadow-md">
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+            className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
           >
             Log out
           </button>

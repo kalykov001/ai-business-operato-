@@ -87,17 +87,16 @@ export function CalendarPage() {
       return;
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "X-Google-Provider-Token":
-            session.provider_token,
-        },
-      },
-    );
+const response = await fetch(
+  `http://localhost:5000/api/calendar/events`,
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "X-Google-Provider-Token": session.provider_token,
+    },
+  },
+);
 
     const text = await response.text();
 
@@ -220,34 +219,23 @@ export function CalendarPage() {
       const end =
         `${newDate}T${newEnd}:00+06:00`;
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events`,
-        {
-          method: "POST",
-
-          headers: {
-            Authorization:
-              `Bearer ${session.access_token}`,
-
-            "X-Google-Provider-Token":
-              session.provider_token,
-
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            summary: newTitle.trim(),
-
-            description:
-              newDescription.trim() ||
-              undefined,
-
-            start,
-            end,
-          }),
-        },
-      );
+     const response = await fetch(
+  `http://localhost:5000/api/calendar/events`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "X-Google-Provider-Token": session.provider_token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      summary: newTitle.trim(),
+      description: newDescription.trim() || undefined,
+      start,
+      end,
+    }),
+  },
+);
 
   const text = await response.text();
 
@@ -364,22 +352,18 @@ if (!response.ok) {
         return;
       }
 
-   const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/calendar/events/${encodeURIComponent(
+  const response = await fetch(
+  `http://localhost:5000/api/calendar/events/${encodeURIComponent(
     selectedEvent.id,
   )}`,
-        {
-          method: "DELETE",
-
-          headers: {
-            Authorization:
-              `Bearer ${session.access_token}`,
-
-            "X-Google-Provider-Token":
-              session.provider_token,
-          },
-        },
-      );
+  {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "X-Google-Provider-Token": session.provider_token,
+    },
+  },
+);
 
       const data = await response.json();
 
