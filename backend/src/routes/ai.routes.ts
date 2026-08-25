@@ -28,8 +28,22 @@ router.post("/chat", authMiddleware, async (req, res) => {
       });
     }
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: "User is not authenticated",
+      });
+    }
+
     const userId = req.user.id;
-    const googleToken = req.user.googleToken; // проверьте точное имя поля в вашем authMiddleware
+
+    const googleTokenHeader =
+      req.headers["x-google-provider-token"];
+
+    const googleToken =
+      typeof googleTokenHeader === "string"
+        ? googleTokenHeader
+        : "";
 
     const answer = await askGemini(message, userId, googleToken);
 
