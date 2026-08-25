@@ -1,7 +1,19 @@
+import "dotenv/config";
 import createApi from "./createApi";
-import { env } from "./config/env";
-const port = Number(process.env.PORT) || 5000;
+
+
 const app = createApi();
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+
+const PORT = Number(process.env.PORT) || 5000;
+
+const server = app.listen(PORT, () => {
+  console.log("=================================");
+  console.log("🔥 AI BUSINESS OPERATOR BACKEND");
+  console.log(`🔥 http://localhost:${PORT}`);
+  console.log("🔥 SERVER IS ACTUALLY LISTENING");
+  console.log("=================================");
+});
+
+server.on("error", (error) => {
+  console.error("🔥 SERVER ERROR:", error);
 });

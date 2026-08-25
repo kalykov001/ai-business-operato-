@@ -103,11 +103,11 @@ export const createNoteController = async (
       });
     }
 
-    const note = await createNote(
-      req.user.id,
-      title.trim(),
-      content?.trim() || "",
-    );
+  const note = await createNote({
+  userId: req.user.id,
+  title: title.trim(),
+  content: content?.trim() || "",
+});
 
     return res.status(201).json(note);
   } catch (error) {

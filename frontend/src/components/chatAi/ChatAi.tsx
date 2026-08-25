@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Bot, Send, Sparkles, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-
 type Message = {
   id: string;
   role: "user" | "assistant";
@@ -58,39 +57,17 @@ const ChatAi = () => {
   }, []);
 
 const sendMessage = async () => {
+  console.log("🔥🔥🔥 SEND MESSAGE CALLED");
+
   const text = message.trim();
 
-  if (!text || loading) return;
+  console.log("🔥 TEXT:", text);
 
-  // Команда clean — очистить историю
-  if (text.toLowerCase() === "clean") {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setMessage("");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("ai_messages")
-        .delete()
-        .eq("user_id", user.id);
-
-      if (error) {
-        console.error("Clear chat error:", error);
-        return;
-      }
-
-      // Очищаем сообщения на экране
-      setMessages([]);
-      setMessage("");
-    } catch (error) {
-      console.error("Clear chat error:", error);
-    }
-
+  if (!text || loading) {
+    console.log("❌ STOP:", {
+      text,
+      loading,
+    });
     return;
   }
 
@@ -114,20 +91,29 @@ const sendMessage = async () => {
 
     const userId = session.user.id;
 
-    // Сохраняем сообщение пользователя
-    const { data: savedUserMessage, error: userMessageError } =
-      await supabase
-        .from("ai_messages")
-        .insert({
-          user_id: userId,
-          role: "user",
-          content: text,
-        })
-        .select("id, role, content")
-        .single();
+    // =========================================
+    // SAVE USER MESSAGE
+    // =========================================
+
+    const {
+      data: savedUserMessage,
+      error: userMessageError,
+    } = await supabase
+      .from("ai_messages")
+      .insert({
+        user_id: userId,
+        role: "user",
+        content: text,
+      })
+      .select("id, role, content")
+      .single();
 
     if (userMessageError) {
-      console.error("Save user message error:", userMessageError);
+      console.error(
+        "❌ Save user message error:",
+        userMessageError,
+      );
+
       throw userMessageError;
     }
 
@@ -143,61 +129,138 @@ const sendMessage = async () => {
     setMessage("");
     setLoading(true);
 
+    // =========================================
+    // API URL
+    // =========================================
+
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL;
+
     console.log(
-      "Google provider token exists:",
-      !!session.provider_token
+      "🔥🔥🔥 NEXT_PUBLIC_API_URL:",
+      API_URL,
     );
 
-    // Отправляем сообщение AI
-const response = await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/api/ai/chat`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${session.access_token}`,
-      "X-Google-Provider-Token": session.provider_token ?? "",
-    },
-    body: JSON.stringify({
-      message: text,
-    }),
-  }
-);
+    if (!API_URL) {
+      throw new Error(
+        "NEXT_PUBLIC_API_URL is not defined",
+      );
+    }
 
-const responseText = await response.text();
+    const AI_URL =
+      `${API_URL}/api/ai/chat`;
 
-console.log("AI API STATUS:", response.status);
-console.log("AI API RESPONSE:", responseText);
+    console.log(
+      "🔥🔥🔥 AI REQUEST URL:",
+      AI_URL,
+    );
 
-let data: any;
+    console.log(
+      "🔥 GOOGLE TOKEN:",
+      !!session.provider_token,
+    );
 
-try {
-  data = JSON.parse(responseText);
-} catch {
-  throw new Error(
-    `AI API вернул не JSON. Status: ${response.status}`
-  );
-}
+    console.log(
+      "🔥 USER ID:",
+      userId,
+    );
 
-if (!response.ok) {
-  throw new Error(data.error || data.message || "AI error");
-}
+    console.log(
+      "🔥 MESSAGE:",
+      text,
+    );
 
-const aiAnswer = data.answer || "AI не вернул ответ.";
-    // Сохраняем ответ AI
-    const { data: savedAiMessage, error: aiMessageError } =
-      await supabase
-        .from("ai_messages")
-        .insert({
-          user_id: userId,
-          role: "assistant",
-          content: aiAnswer,
-        })
-        .select("id, role, content")
-        .single();
+    // =========================================
+    // AI REQUEST
+    // =========================================
+
+    const response = await fetch(
+      AI_URL,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${session.access_token}`,
+
+          "X-Google-Provider-Token":
+            session.provider_token ?? "",
+        },
+
+        body: JSON.stringify({
+          message: text,
+        }),
+      },
+    );
+
+    console.log(
+      "🔥 AI RESPONSE STATUS:",
+      response.status,
+    );
+
+    const responseText =
+      await response.text();
+
+    console.log(
+      "🔥 AI RESPONSE TEXT:",
+      responseText,
+    );
+
+    let data: any;
+
+    try {
+      data = JSON.parse(
+        responseText,
+      );
+    } catch {
+      throw new Error(
+        `AI API вернул не JSON. Status: ${response.status}`,
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error ||
+          data?.message ||
+          "AI error",
+      );
+    }
+
+    const aiAnswer =
+      data?.answer ||
+      "AI не вернул ответ.";
+
+    console.log(
+      "🔥 AI ANSWER:",
+      aiAnswer,
+    );
+
+    // =========================================
+    // SAVE AI MESSAGE
+    // =========================================
+
+    const {
+      data: savedAiMessage,
+      error: aiMessageError,
+    } = await supabase
+      .from("ai_messages")
+      .insert({
+        user_id: userId,
+        role: "assistant",
+        content: aiAnswer,
+      })
+      .select("id, role, content")
+      .single();
 
     if (aiMessageError) {
-      console.error("Save AI message error:", aiMessageError);
+      console.error(
+        "❌ Save AI message error:",
+        aiMessageError,
+      );
+
       throw aiMessageError;
     }
 
@@ -206,11 +269,15 @@ const aiAnswer = data.answer || "AI не вернул ответ.";
       {
         id: savedAiMessage.id,
         role: "assistant",
-        content: savedAiMessage.content,
+        content:
+          savedAiMessage.content,
       },
     ]);
   } catch (error) {
-    console.error("Chat AI error:", error);
+    console.error(
+      "❌ Chat AI error:",
+      error,
+    );
 
     setMessages((prev) => [
       ...prev,
@@ -373,9 +440,11 @@ const aiAnswer = data.answer || "AI не вернул ответ.";
           />
 
           <button
-            type="button"
-            onClick={sendMessage}
-            disabled={loading || !message.trim()}
+             type="button"
+  onClick={() => {
+    console.log("🔥🔥🔥 BUTTON CLICKED");
+    sendMessage();
+  }}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Send className="h-4 w-4" />

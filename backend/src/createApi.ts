@@ -1,4 +1,5 @@
 import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
 
@@ -17,15 +18,15 @@ const allowedOrigins = [
 const createApi = () => {
   const app = express();
 
+  console.log("🔥 createApi() CREATED");
+
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Разрешаем запросы без Origin
-        // и наши frontend-домены
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.error("CORS blocked origin:", origin);
+          console.error("❌ CORS BLOCKED:", origin);
           callback(new Error("Not allowed by CORS"));
         }
       },
@@ -46,17 +47,41 @@ const createApi = () => {
         "Authorization",
         "X-Google-Provider-Token",
       ],
-    })
+    }),
   );
 
   app.use(express.json());
 
+  // =========================
+  // HEALTH
+  // =========================
+
+  app.get("/health", (_req, res) => {
+    console.log("🔥 HEALTH REQUEST");
+
+    res.status(200).json({
+      success: true,
+      message: "Backend is working",
+    });
+  });
+
+  // =========================
+  // ROUTES
+  // =========================
+
   app.use("/api/auth", authRouter);
+
   app.use("/api/calendar", calendarRouter);
+
   app.use("/api/gmail", gmailRouter);
+
   app.use("/api/drive", driveRouter);
+
   app.use("/api/notes", notesRouter);
+
   app.use("/api/ai", aiRoutes);
+
+  console.log("🔥 AI ROUTES REGISTERED");
 
   return app;
 };
