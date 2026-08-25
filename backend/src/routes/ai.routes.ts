@@ -61,4 +61,53 @@ router.post("/chat", authMiddleware, async (req, res) => {
   }
 });
 
+router.post("/suggestions", authMiddleware, async (req, res) => {
+  console.log("🔥🔥🔥 SUGGESTIONS ROUTE REACHED");
+
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: "User is not authenticated",
+      });
+    }
+
+    const userId = req.user.id;
+
+    const googleTokenHeader =
+      req.headers["x-google-provider-token"];
+
+    const googleToken =
+      typeof googleTokenHeader === "string"
+        ? googleTokenHeader
+        : "";
+
+    const prompt =
+      "Проанализируй мои текущие задачи, заметки, CRM-контакты, " +
+      "письма и события календаря. Дай 3-5 конкретных, кратких " +
+      "рекомендаций о том, на что стоит обратить внимание сегодня " +
+      "или в ближайшие дни. Отвечай только списком рекомендаций, " +
+      "каждая с новой строки, без нумерации и лишних пояснений.";
+
+    const answer = await askGemini(prompt, userId, googleToken);
+
+    const suggestions = answer
+      .split("\n")
+      .map((line) => line.replace(/^[-•\d.]+\s*/, "").trim())
+      .filter((line) => line.length > 0);
+
+    return res.json({
+      success: true,
+      suggestions,
+    });
+  } catch (error: any) {
+    console.error("❌ SUGGESTIONS ROUTE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: error?.message ?? "Internal server error",
+    });
+  }
+});
+
 export default router;
