@@ -13,23 +13,38 @@ router.get("/test", (_req, res) => {
     message: "AI route works",
   });
 });
-router.post("/chat", (req, res) => {
+
+router.post("/chat", authMiddleware, async (req, res) => {
   console.log("🔥🔥🔥 CHAT ROUTE REACHED");
   console.log("BODY:", req.body);
 
-  res.json({
-    success: true,
-    answer: "TEST FROM LOCAL BACKEND",
-  });
-});
-router.post("/chat", (req, res) => {
-  console.log("🔥🔥🔥 CHAT ROUTE REACHED");
-  console.log("BODY:", req.body);
+  try {
+    const { message } = req.body;
 
-  res.json({
-    success: true,
-    answer: "TEST FROM LOCAL BACKEND",
-  });
+    if (!message?.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Message is required",
+      });
+    }
+
+    const userId = req.user.id;
+    const googleToken = req.user.googleToken; // проверьте точное имя поля в вашем authMiddleware
+
+    const answer = await askGemini(message, userId, googleToken);
+
+    return res.json({
+      success: true,
+      answer,
+    });
+  } catch (error: any) {
+    console.error("❌ CHAT ROUTE ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: error?.message ?? "Internal server error",
+    });
+  }
 });
 
 export default router;
