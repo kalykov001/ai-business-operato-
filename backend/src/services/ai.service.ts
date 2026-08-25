@@ -300,8 +300,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "get_contact_by_id",
-      description:
-        "Get one exact CRM contact by ID.",
+      description: "Get one exact CRM contact by ID.",
       parameters: {
         type: "object",
         properties: {
@@ -320,8 +319,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "create_contact",
-      description:
-        "Create a new CRM contact.",
+      description: "Create a new CRM contact.",
       parameters: {
         type: "object",
         properties: {
@@ -345,12 +343,7 @@ const tools = [
           },
           status: {
             type: "string",
-            enum: [
-              "active",
-              "lead",
-              "customer",
-              "inactive",
-            ],
+            enum: ["active", "lead", "customer", "inactive"],
           },
           notes: {
             type: "string",
@@ -366,8 +359,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "update_contact",
-      description:
-        "Update an existing CRM contact.",
+      description: "Update an existing CRM contact.",
       parameters: {
         type: "object",
         properties: {
@@ -394,12 +386,7 @@ const tools = [
           },
           status: {
             type: "string",
-            enum: [
-              "active",
-              "lead",
-              "customer",
-              "inactive",
-            ],
+            enum: ["active", "lead", "customer", "inactive"],
           },
           notes: {
             type: "string",
@@ -415,8 +402,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "delete_contact",
-      description:
-        "Delete an existing CRM contact.",
+      description: "Delete an existing CRM contact.",
       parameters: {
         type: "object",
         properties: {
@@ -493,8 +479,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "create_calendar_event",
-      description:
-        "Create a new Google Calendar event.",
+      description: "Create a new Google Calendar event.",
       parameters: {
         type: "object",
         properties: {
@@ -508,13 +493,11 @@ const tools = [
           },
           start: {
             type: "string",
-            description:
-              "Start date/time in ISO 8601 format",
+            description: "Start date/time in ISO 8601 format",
           },
           end: {
             type: "string",
-            description:
-              "End date/time in ISO 8601 format",
+            description: "End date/time in ISO 8601 format",
           },
         },
         required: ["summary", "start", "end"],
@@ -546,94 +529,87 @@ async function executeTool(
        TASKS
     ===================================================== */
 
- if (functionName === "create_task") {
-  console.log("=================================");
-  console.log("🔥 CREATE TASK");
-  console.log("USER ID:", userId);
-  console.log("ARGS:", JSON.stringify(args, null, 2));
-  console.log("=================================");
+    if (functionName === "create_task") {
+      console.log("=================================");
+      console.log("🔥 CREATE TASK");
+      console.log("USER ID:", userId);
+      console.log("ARGS:", JSON.stringify(args, null, 2));
+      console.log("=================================");
 
-  if (!userId) {
-    return {
-      success: false,
-      error: "Authenticated user ID is missing.",
-    };
-  }
+      if (!userId) {
+        return {
+          success: false,
+          error: "Authenticated user ID is missing.",
+        };
+      }
 
-  if (!args?.title) {
-    return {
-      success: false,
-      error: "Task title is required.",
-    };
-  }
+      if (!args?.title) {
+        return {
+          success: false,
+          error: "Task title is required.",
+        };
+      }
 
-  try {
-    const task = await createTask({
-      userId,
-      title: String(args.title),
-      description:
-        args.description !== undefined
-          ? String(args.description)
-          : null,
-      status: args.status ?? "todo",
-      priority: args.priority ?? "medium",
-      dueDate: args.due_date ?? null,
-    });
+      try {
+        const task = await createTask({
+          userId,
+          title: String(args.title),
+          description:
+            args.description !== undefined
+              ? String(args.description)
+              : null,
+          status: args.status ?? "todo",
+          priority: args.priority ?? "medium",
+          dueDate: args.due_date ?? null,
+        });
 
-    console.log("=================================");
-    console.log("✅ TASK CREATED IN DATABASE");
-    console.log("TASK:", JSON.stringify(task, null, 2));
-    console.log("=================================");
+        console.log("=================================");
+        console.log("✅ TASK CREATED IN DATABASE");
+        console.log("TASK:", JSON.stringify(task, null, 2));
+        console.log("=================================");
 
-    if (!task?.id) {
-      console.error(
-        "❌ SUPABASE RETURNED TASK WITHOUT ID",
-      );
+        if (!task?.id) {
+          console.error("❌ SUPABASE RETURNED TASK WITHOUT ID");
 
-      return {
-        success: false,
-        error:
-          "Task insert completed but database did not return the created task.",
-      };
+          return {
+            success: false,
+            error:
+              "Task insert completed but database did not return the created task.",
+          };
+        }
+
+        return {
+          success: true,
+          task,
+          message: `Задача "${task.title}" успешно создана.`,
+        };
+      } catch (error: any) {
+        console.error("=================================");
+        console.error("❌ CREATE TASK DATABASE ERROR");
+        console.error("USER ID:", userId);
+        console.error("ARGS:", args);
+        console.error("ERROR:", error);
+        console.error("MESSAGE:", error?.message);
+        console.error("DETAILS:", error?.details);
+        console.error("HINT:", error?.hint);
+        console.error("CODE:", error?.code);
+        console.error("=================================");
+
+        return {
+          success: false,
+          error:
+            error?.message || "Failed to create task in database.",
+        };
+      }
     }
-
-    return {
-      success: true,
-      task,
-      message: `Задача "${task.title}" успешно создана.`,
-    };
-  } catch (error: any) {
-    console.error("=================================");
-    console.error("❌ CREATE TASK DATABASE ERROR");
-    console.error("USER ID:", userId);
-    console.error("ARGS:", args);
-    console.error("ERROR:", error);
-    console.error("MESSAGE:", error?.message);
-    console.error("DETAILS:", error?.details);
-    console.error("HINT:", error?.hint);
-    console.error("CODE:", error?.code);
-    console.error("=================================");
-
-    return {
-      success: false,
-      error:
-        error?.message ||
-        "Failed to create task in database.",
-    };
-  }
-}
 
     if (functionName === "get_tasks") {
       const status =
-        args?.status &&
-        args.status !== "null"
+        args?.status && args.status !== "null"
           ? args.status
           : undefined;
 
-      const tasks = await getTasks(
-        userId,
-        status,
-      );
+      const tasks = await getTasks(userId, status);
 
       return {
         success: true,
@@ -649,31 +625,27 @@ async function executeTool(
         };
       }
 
-      const task = await updateTask(
-        userId,
-        args.task_id,
-        {
-          ...(args.title !== undefined && {
-            title: args.title,
-          }),
+      const task = await updateTask(userId, args.task_id, {
+        ...(args.title !== undefined && {
+          title: args.title,
+        }),
 
-          ...(args.description !== undefined && {
-            description: args.description,
-          }),
+        ...(args.description !== undefined && {
+          description: args.description,
+        }),
 
-          ...(args.status !== undefined && {
-            status: args.status,
-          }),
+        ...(args.status !== undefined && {
+          status: args.status,
+        }),
 
-          ...(args.priority !== undefined && {
-            priority: args.priority,
-          }),
+        ...(args.priority !== undefined && {
+          priority: args.priority,
+        }),
 
-          ...(args.due_date !== undefined && {
-            dueDate: args.due_date,
-          }),
-        },
-      );
+        ...(args.due_date !== undefined && {
+          dueDate: args.due_date,
+        }),
+      });
 
       return {
         success: true,
@@ -690,10 +662,7 @@ async function executeTool(
         };
       }
 
-      const task = await deleteTask(
-        userId,
-        args.task_id,
-      );
+      const task = await deleteTask(userId, args.task_id);
 
       return {
         success: true,
@@ -744,19 +713,15 @@ async function executeTool(
         };
       }
 
-      const note = await updateNote(
-        userId,
-        args.note_id,
-        {
-          ...(args.title !== undefined && {
-            title: args.title,
-          }),
+      const note = await updateNote(userId, args.note_id, {
+        ...(args.title !== undefined && {
+          title: args.title,
+        }),
 
-          ...(args.content !== undefined && {
-            content: args.content,
-          }),
-        },
-      );
+        ...(args.content !== undefined && {
+          content: args.content,
+        }),
+      });
 
       return {
         success: true,
@@ -773,10 +738,7 @@ async function executeTool(
         };
       }
 
-      const note = await getNoteById(
-        userId,
-        args.note_id,
-      );
+      const note = await getNoteById(userId, args.note_id);
 
       if (!note) {
         return {
@@ -785,10 +747,7 @@ async function executeTool(
         };
       }
 
-      await deleteNote(
-        userId,
-        args.note_id,
-      );
+      await deleteNote(userId, args.note_id);
 
       return {
         success: true,
@@ -802,9 +761,7 @@ async function executeTool(
     ===================================================== */
 
     if (functionName === "get_contacts") {
-      const contacts = await getContacts(
-        userId,
-      );
+      const contacts = await getContacts(userId);
 
       return {
         success: true,
@@ -846,19 +803,16 @@ async function executeTool(
         };
       }
 
-      const contact = await createContact(
-        userId,
-        {
-          first_name: args.first_name,
-          last_name: args.last_name,
-          email: args.email,
-          phone: args.phone,
-          company: args.company,
-          position: args.position,
-          status: args.status,
-          notes: args.notes,
-        },
-      );
+      const contact = await createContact(userId, {
+        first_name: args.first_name,
+        last_name: args.last_name,
+        email: args.email,
+        phone: args.phone,
+        company: args.company,
+        position: args.position,
+        status: args.status,
+        notes: args.notes,
+      });
 
       return {
         success: true,
@@ -948,48 +902,37 @@ async function executeTool(
       if (!googleToken) {
         return {
           success: false,
-          error:
-            "Google provider token is missing.",
+          error: "Google provider token is missing.",
         };
       }
 
-      const gmailData =
-        await getGmailMessagesService(
-          googleToken,
-        );
+      const gmailData = await getGmailMessagesService(googleToken);
 
       return {
         success: true,
-        messages:
-          gmailData.messages ?? [],
+        messages: gmailData.messages ?? [],
       };
     }
 
-    if (
-      functionName ===
-      "search_gmail_messages"
-    ) {
+    if (functionName === "search_gmail_messages") {
       if (!googleToken) {
         return {
           success: false,
-          error:
-            "Google provider token is missing.",
+          error: "Google provider token is missing.",
         };
       }
 
       if (!args?.query) {
         return {
           success: false,
-          error:
-            "Gmail search query is required.",
+          error: "Gmail search query is required.",
         };
       }
 
-      const messages =
-        await searchGmailMessagesService(
-          googleToken,
-          args.query,
-        );
+      const messages = await searchGmailMessagesService(
+        googleToken,
+        args.query,
+      );
 
       return {
         success: true,
@@ -1002,85 +945,53 @@ async function executeTool(
        CALENDAR
     ===================================================== */
 
-    if (
-      functionName ===
-      "get_calendar_events"
-    ) {
+    if (functionName === "get_calendar_events") {
       if (!googleToken) {
         return {
           success: false,
-          error:
-            "Google provider token is missing.",
+          error: "Google provider token is missing.",
         };
       }
 
-      const events =
-        await getCalendarEvents(
-          googleToken,
-        );
+      const events = await getCalendarEvents(googleToken);
 
       return {
         success: true,
-        events: events
-          .slice(0, 50)
-          .map((event: any) => ({
-            id: event.id,
+        events: events.slice(0, 50).map((event: any) => ({
+          id: event.id,
 
-            summary:
-              event.summary ??
-              "Без названия",
+          summary: event.summary ?? "Без названия",
 
-            start:
-              event.start?.dateTime ??
-              event.start?.date ??
-              "",
+          start: event.start?.dateTime ?? event.start?.date ?? "",
 
-            end:
-              event.end?.dateTime ??
-              event.end?.date ??
-              "",
+          end: event.end?.dateTime ?? event.end?.date ?? "",
 
-            description:
-              event.description ?? "",
-          })),
+          description: event.description ?? "",
+        })),
       };
     }
 
-    if (
-      functionName ===
-      "create_calendar_event"
-    ) {
+    if (functionName === "create_calendar_event") {
       if (!googleToken) {
         return {
           success: false,
-          error:
-            "Google provider token is missing.",
+          error: "Google provider token is missing.",
         };
       }
 
-      if (
-        !args?.summary ||
-        !args?.start ||
-        !args?.end
-      ) {
+      if (!args?.summary || !args?.start || !args?.end) {
         return {
           success: false,
-          error:
-            "summary, start and end are required.",
+          error: "summary, start and end are required.",
         };
       }
 
-      const event =
-        await createCalendarEvent(
-          googleToken,
-          {
-            summary: args.summary,
-            description:
-              args.description,
-            start: args.start,
-            end: args.end,
-          },
-        );
+      const event = await createCalendarEvent(googleToken, {
+        summary: args.summary,
+        description: args.description,
+        start: args.start,
+        end: args.end,
+      });
 
       return {
         success: true,
@@ -1098,17 +1009,13 @@ async function executeTool(
       error: `Unknown tool: ${functionName}`,
     };
   } catch (error: any) {
-    console.error(
-      `❌ TOOL FAILED: ${functionName}`,
-    );
+    console.error(`❌ TOOL FAILED: ${functionName}`);
 
     console.error(error);
 
     return {
       success: false,
-      error:
-        error?.message ??
-        `Tool ${functionName} failed`,
+      error: error?.message ?? `Tool ${functionName} failed`,
     };
   }
 }
@@ -1295,10 +1202,7 @@ export async function askGemini(
   const messages: any[] = [
     {
       role: "system",
-      content: SYSTEM_PROMPT.replace(
-        "{{USER_ID}}",
-        userId,
-      ),
+      content: SYSTEM_PROMPT.replace("{{USER_ID}}", userId),
     },
     {
       role: "user",
@@ -1315,26 +1219,22 @@ export async function askGemini(
 
     let completion;
 
-  try {
-  completion = await groq.chat.completions.create({
-    model: "openai/gpt-oss-120b",
-    messages,
-    tools,
-    tool_choice: "auto",
-    temperature: 0,
-    max_tokens: 2000,
-  });
-} catch (error: any) {
-  console.error("❌ GROQ ERROR:", error);
+    try {
+      completion = await groq.chat.completions.create({
+        model: "openai/gpt-oss-120b",
+        messages,
+        tools,
+        tool_choice: "auto",
+        temperature: 0,
+        max_tokens: 2000,
+      });
+    } catch (error: any) {
+      console.error("❌ GROQ ERROR:", error);
 
-  return (
-    error?.message ??
-    "Не удалось получить ответ от AI."
-  );
-}
+      return error?.message ?? "Не удалось получить ответ от AI.";
+    }
 
-    const responseMessage =
-      completion.choices[0]?.message;
+    const responseMessage = completion.choices[0]?.message;
 
     if (!responseMessage) {
       console.error("❌ EMPTY GROQ RESPONSE");
@@ -1344,17 +1244,12 @@ export async function askGemini(
 
     console.log(
       "🔥 GROQ RESPONSE:",
-      JSON.stringify(
-        responseMessage,
-        null,
-        2,
-      ),
+      JSON.stringify(responseMessage, null, 2),
     );
 
     messages.push(responseMessage);
 
-    const toolCalls =
-      responseMessage.tool_calls;
+    const toolCalls = responseMessage.tool_calls;
 
     /*
      * =====================================================
@@ -1362,14 +1257,10 @@ export async function askGemini(
      * =====================================================
      */
 
-    if (
-      !toolCalls ||
-      toolCalls.length === 0
-    ) {
+    if (!toolCalls || toolCalls.length === 0) {
       console.log("ℹ️ NO TOOL CALL");
 
-      const lowerMessage =
-        message.toLowerCase();
+      const lowerMessage = message.toLowerCase();
 
       /*
        * Защита от ситуации:
@@ -1381,31 +1272,35 @@ export async function askGemini(
        * "Задача создана"
        *
        * но create_task не был вызван.
+       *
+       * ВАЖНО: эта проверка должна срабатывать только на
+       * ПЕРВОМ шаге цикла (step === 0). Если tool уже был
+       * вызван на предыдущем шаге (например create_task
+       * успешно отработал), то на следующем шаге модель
+       * просто формулирует финальный текстовый ответ —
+       * в этот момент toolCalls закономерно пуст, и это
+       * НЕ является ошибкой.
        */
 
       const looksLikeTaskCreation =
-        lowerMessage.includes("создай задачу") ||
-        lowerMessage.includes("создать задачу") ||
-        lowerMessage.includes("добавь задачу") ||
-        lowerMessage.includes("добавить задачу") ||
-        lowerMessage.includes("поставь задачу") ||
-        lowerMessage.includes("задачу купить") ||
-        lowerMessage.includes("задача купить");
+        step === 0 &&
+        (lowerMessage.includes("создай задачу") ||
+          lowerMessage.includes("создать задачу") ||
+          lowerMessage.includes("добавь задачу") ||
+          lowerMessage.includes("добавить задачу") ||
+          lowerMessage.includes("поставь задачу") ||
+          lowerMessage.includes("задачу купить") ||
+          lowerMessage.includes("задача купить"));
 
       if (looksLikeTaskCreation) {
         console.error(
           "❌ AI CLAIMED TASK CREATION WITHOUT TOOL CALL",
         );
 
-        return (
-          "Не удалось создать задачу: AI не вызвал инструмент create_task."
-        );
+        return "Не удалось создать задачу: AI не вызвал инструмент create_task.";
       }
 
-      return (
-        responseMessage.content ??
-        "Готово."
-      );
+      return responseMessage.content ?? "Готово.";
     }
 
     /*
@@ -1415,11 +1310,9 @@ export async function askGemini(
      */
 
     for (const toolCall of toolCalls) {
-      const functionName =
-        toolCall.function.name;
+      const functionName = toolCall.function.name;
 
-      const rawArguments =
-        toolCall.function.arguments;
+      const rawArguments = toolCall.function.arguments;
 
       console.log("\n=================================");
       console.log("🔥 TOOL CALL");
@@ -1437,26 +1330,19 @@ export async function askGemini(
        */
 
       try {
-        args = JSON.parse(
-          rawArguments || "{}",
-        );
+        args = JSON.parse(rawArguments || "{}");
       } catch (error) {
-        console.error(
-          "❌ INVALID TOOL JSON:",
-          error,
-        );
+        console.error("❌ INVALID TOOL JSON:", error);
 
         const result: ToolResult = {
           success: false,
-          error:
-            "AI generated invalid tool arguments.",
+          error: "AI generated invalid tool arguments.",
         };
 
         messages.push({
           role: "tool",
           tool_call_id: toolCall.id,
-          content:
-            JSON.stringify(result),
+          content: JSON.stringify(result),
         });
 
         continue;
@@ -1472,13 +1358,12 @@ export async function askGemini(
       console.log("FUNCTION:", functionName);
       console.log("ARGS:", args);
 
-      const result =
-        await executeTool(
-          functionName,
-          args,
-          userId,
-          googleToken,
-        );
+      const result = await executeTool(
+        functionName,
+        args,
+        userId,
+        googleToken,
+      );
 
       /*
        * ===================================================
@@ -1486,17 +1371,9 @@ export async function askGemini(
        * ===================================================
        */
 
-      console.log(
-        "🔥🔥🔥 REAL TOOL RESULT 🔥🔥🔥",
-      );
+      console.log("🔥🔥🔥 REAL TOOL RESULT 🔥🔥🔥");
 
-      console.log(
-        JSON.stringify(
-          result,
-          null,
-          2,
-        ),
-      );
+      console.log(JSON.stringify(result, null, 2));
 
       /*
        * ===================================================
@@ -1507,17 +1384,12 @@ export async function askGemini(
       messages.push({
         role: "tool",
         tool_call_id: toolCall.id,
-        content:
-          JSON.stringify(result),
+        content: JSON.stringify(result),
       });
     }
   }
 
-  console.error(
-    "❌ AI TOOL LOOP LIMIT REACHED",
-  );
+  console.error("❌ AI TOOL LOOP LIMIT REACHED");
 
-  return (
-    "AI не смог завершить операцию. Попробуйте выполнить запрос ещё раз."
-  );
+  return "AI не смог завершить операцию. Попробуйте выполнить запрос ещё раз.";
 }
