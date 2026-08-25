@@ -1,14 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl) {
   throw new Error("SUPABASE_URL is not defined");
 }
 
 if (!supabaseServiceRoleKey) {
-  throw new Error("SUPABASE_SERVICE_ROLE_KEY is not defined");
+  throw new Error(
+    "SUPABASE_SERVICE_ROLE_KEY is not defined"
+  );
 }
 
 const supabase = createClient(
@@ -16,8 +19,19 @@ const supabase = createClient(
   supabaseServiceRoleKey
 );
 
-type TaskStatus = "todo" | "in_progress" | "done";
-type TaskPriority = "low" | "medium" | "high";
+// =====================================
+// TYPES
+// =====================================
+
+type TaskStatus =
+  | "todo"
+  | "in_progress"
+  | "done";
+
+type TaskPriority =
+  | "low"
+  | "medium"
+  | "high";
 
 type CreateTaskData = {
   userId: string;
@@ -33,6 +47,10 @@ type CreateTaskData = {
 // =====================================
 
 export async function createTask(data: CreateTaskData) {
+  console.log("🔥🔥🔥 CREATE TASK SERVICE CALLED 🔥🔥🔥");
+
+  console.log("DATA:", data);
+
   const { data: task, error } = await supabase
     .from("tasks")
     .insert({
@@ -46,8 +64,10 @@ export async function createTask(data: CreateTaskData) {
     .select()
     .single();
 
+  console.log("TASK RESULT:", task);
+  console.log("TASK ERROR:", error);
+
   if (error) {
-    console.error("Create task error:", error);
     throw error;
   }
 
@@ -62,6 +82,10 @@ export async function getTasks(
   userId: string,
   status?: TaskStatus
 ) {
+  console.log("========== GET TASKS ==========");
+  console.log("USER ID:", userId);
+  console.log("STATUS:", status);
+
   let query = supabase
     .from("tasks")
     .select(
@@ -76,12 +100,24 @@ export async function getTasks(
     query = query.eq("status", status);
   }
 
-  const { data: tasks, error } = await query;
+  const {
+    data: tasks,
+    error,
+  } = await query;
 
   if (error) {
-    console.error("Get tasks error:", error);
+    console.error(
+      "========== GET TASKS ERROR =========="
+    );
+    console.error(error);
+
     throw error;
   }
+
+  console.log(
+    "TASKS FOUND:",
+    tasks?.length ?? 0
+  );
 
   return tasks ?? [];
 }
@@ -101,6 +137,11 @@ export async function updateTask(
     dueDate?: string | null;
   }
 ) {
+  console.log("========== UPDATE TASK ==========");
+  console.log("USER ID:", userId);
+  console.log("TASK ID:", taskId);
+  console.log("DATA:", data);
+
   const updateData: Record<string, any> = {};
 
   if (data.title !== undefined) {
@@ -108,7 +149,8 @@ export async function updateTask(
   }
 
   if (data.description !== undefined) {
-    updateData.description = data.description;
+    updateData.description =
+      data.description;
   }
 
   if (data.status !== undefined) {
@@ -116,14 +158,19 @@ export async function updateTask(
   }
 
   if (data.priority !== undefined) {
-    updateData.priority = data.priority;
+    updateData.priority =
+      data.priority;
   }
 
   if (data.dueDate !== undefined) {
-    updateData.due_date = data.dueDate;
+    updateData.due_date =
+      data.dueDate;
   }
 
-  const { data: task, error } = await supabase
+  const {
+    data: task,
+    error,
+  } = await supabase
     .from("tasks")
     .update(updateData)
     .eq("id", taskId)
@@ -132,9 +179,18 @@ export async function updateTask(
     .single();
 
   if (error) {
-    console.error("Update task error:", error);
+    console.error(
+      "========== UPDATE TASK ERROR =========="
+    );
+    console.error(error);
+
     throw error;
   }
+
+  console.log(
+    "========== TASK UPDATED =========="
+  );
+  console.log(task);
 
   return task;
 }
@@ -147,7 +203,14 @@ export async function deleteTask(
   userId: string,
   taskId: string
 ) {
-  const { data: task, error } = await supabase
+  console.log("========== DELETE TASK ==========");
+  console.log("USER ID:", userId);
+  console.log("TASK ID:", taskId);
+
+  const {
+    data: task,
+    error,
+  } = await supabase
     .from("tasks")
     .delete()
     .eq("id", taskId)
@@ -156,9 +219,18 @@ export async function deleteTask(
     .single();
 
   if (error) {
-    console.error("Delete task error:", error);
+    console.error(
+      "========== DELETE TASK ERROR =========="
+    );
+    console.error(error);
+
     throw error;
   }
+
+  console.log(
+    "========== TASK DELETED =========="
+  );
+  console.log(task);
 
   return task;
 }
