@@ -11,8 +11,6 @@ import {
   ArrowRight,
   Sparkles,
   Users,
-  Loader2,
-  AlertCircle,
 } from "lucide-react";
 
 import Header from "@/components/dashboard/Header";
@@ -28,26 +26,12 @@ type Task = {
   due_date: string | null;
 };
 
-type SuggestionsResponse = {
-  suggestions?: string[];
-  message?: string;
-  error?: string;
-  [key: string]: unknown;
-};
-
 export default function Home() {
   const router = useRouter();
 
   const [userName, setUserName] = useState("User");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
-  const [suggestions, setSuggestions] =
-    useState<SuggestionsResponse | null>(null);
-  const [suggestionsError, setSuggestionsError] = useState<string | null>(
-    null,
-  );
 
   // =========================
   // LOAD DASHBOARD
@@ -97,106 +81,6 @@ export default function Home() {
   }, []);
 
   // =========================
-  // AI SUGGESTIONS
-  // =========================
-
-  const handleReviewSuggestions = async () => {
-    try {
-      setSuggestionsLoading(true);
-      setSuggestionsError(null);
-      setSuggestions(null);
-
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      if (!session?.access_token) {
-        throw new Error("Supabase session not found");
-      }
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error(
-          "NEXT_PUBLIC_API_URL is not configured",
-        );
-      }
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      };
-
-      if (session.provider_token) {
-        headers["X-Google-Provider-Token"] =
-          session.provider_token;
-      }
-
-      console.log("AI suggestions request:", {
-        apiUrl,
-        hasAccessToken: !!session.access_token,
-        hasGoogleToken: !!session.provider_token,
-      });
-
-      const response = await fetch(
-        `${apiUrl}/api/ai/suggestions`,
-        {
-          method: "POST",
-          headers,
-        },
-      );
-
-      let data: SuggestionsResponse;
-
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error(
-          `Server returned invalid JSON (${response.status})`,
-        );
-      }
-
-      console.log(
-        "SUGGESTIONS STATUS:",
-        response.status,
-      );
-
-      console.log(
-        "SUGGESTIONS DATA:",
-        data,
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-            data.message ||
-            `Failed to get suggestions (${response.status})`,
-        );
-      }
-
-      setSuggestions(data);
-    } catch (error) {
-      console.error(
-        "Review suggestions error:",
-        error,
-      );
-
-      setSuggestionsError(
-        error instanceof Error
-          ? error.message
-          : "Failed to load AI suggestions",
-      );
-    } finally {
-      setSuggestionsLoading(false);
-    }
-  };
-
-  // =========================
   // TASKS
   // =========================
 
@@ -242,25 +126,6 @@ export default function Home() {
 
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={handleReviewSuggestions}
-                    disabled={suggestionsLoading}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-medium shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {suggestionsLoading ? (
-                      <Loader2
-                        size={16}
-                        className="animate-spin"
-                      />
-                    ) : (
-                      <Sparkles size={16} />
-                    )}
-
-                    {suggestionsLoading
-                      ? "Analyzing..."
-                      : "Review suggestions"}
-                  </button>
-
-                  <button
                     onClick={() => router.push("/ai")}
                     className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-medium shadow-sm transition hover:bg-muted"
                   >
@@ -270,109 +135,6 @@ export default function Home() {
                 </div>
               </div>
             </section>
-
-            {/* =========================
-                AI SUGGESTIONS
-            ========================= */}
-
-            {(suggestionsLoading ||
-              suggestions ||
-              suggestionsError) && (
-              <section className="rounded-xl border bg-card shadow-sm">
-                <div className="flex items-center justify-between border-b p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                      <Sparkles size={18} />
-                    </div>
-
-                    <div>
-                      <h2 className="font-semibold">
-                        AI Suggestions
-                      </h2>
-
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Operator AI analysis
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  {suggestionsLoading && (
-                    <div className="flex items-center gap-3 rounded-lg bg-muted p-4">
-                      <Loader2
-                        size={18}
-                        className="animate-spin"
-                      />
-
-                      <div>
-                        <p className="text-sm font-medium">
-                          Analyzing your workspace...
-                        </p>
-
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          AI is checking your tasks, calendar,
-                          emails and connected data.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {suggestionsError && (
-                    <div className="flex gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                      <AlertCircle
-                        size={18}
-                        className="mt-0.5 shrink-0"
-                      />
-
-                      <div>
-                        <p className="text-sm font-medium">
-                          Could not generate suggestions
-                        </p>
-
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {suggestionsError}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {suggestions && !suggestionsLoading && (
-                    <div className="space-y-3">
-                      {Array.isArray(
-                        suggestions.suggestions,
-                      ) &&
-                      suggestions.suggestions.length > 0 ? (
-                        suggestions.suggestions.map(
-                          (suggestion, index) => (
-                            <div
-                              key={index}
-                              className="flex gap-3 rounded-lg border p-4"
-                            >
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                                {index + 1}
-                              </div>
-
-                              <p className="text-sm">
-                                {suggestion}
-                              </p>
-                            </div>
-                          ),
-                        )
-                      ) : (
-                        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">
-                          {JSON.stringify(
-                            suggestions,
-                            null,
-                            2,
-                          )}
-                        </pre>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
 
             {/* =========================
                 OVERVIEW
