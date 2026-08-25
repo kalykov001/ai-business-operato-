@@ -1315,42 +1315,23 @@ export async function askGemini(
 
     let completion;
 
-    try {
-   const lowerMessage = message.toLowerCase();
+  try {
+  completion = await groq.chat.completions.create({
+    model: "openai/gpt-oss-120b",
+    messages,
+    tools,
+    tool_choice: "auto",
+    temperature: 0,
+    max_tokens: 2000,
+  });
+} catch (error: any) {
+  console.error("❌ GROQ ERROR:", error);
 
-const isTaskCreateRequest =
-  lowerMessage.includes("создай задачу") ||
-  lowerMessage.includes("создать задачу") ||
-  lowerMessage.includes("добавь задачу") ||
-  lowerMessage.includes("добавить задачу") ||
-  lowerMessage.includes("поставь задачу") ||
-  lowerMessage.startsWith("задача ");
-
-const toolChoice = isTaskCreateRequest
-  ? {
-      type: "function" as const,
-      function: {
-        name: "create_task",
-      },
-    }
-  : "auto";
-
-completion = await groq.chat.completions.create({
-  model: "openai/gpt-oss-120b",
-  messages,
-  tools,
-  tool_choice: toolChoice,
-  temperature: 0,
-  max_tokens: 2000,
-});
-    } catch (error: any) {
-      console.error("❌ GROQ ERROR:", error);
-
-      return (
-        error?.message ??
-        "Не удалось получить ответ от AI."
-      );
-    }
+  return (
+    error?.message ??
+    "Не удалось получить ответ от AI."
+  );
+}
 
     const responseMessage =
       completion.choices[0]?.message;
