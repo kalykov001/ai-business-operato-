@@ -165,7 +165,7 @@ export default function Home() {
                   </div>
 
                   <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                    Good afternoon, {firstName} 👋
+                    Hello, {firstName} 👋
                   </h1>
 
                   <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
