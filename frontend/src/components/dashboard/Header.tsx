@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/shared/ui/ThemeMode";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,45 +10,115 @@ export default function Header() {
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    if (theme === "dark") {
-      setTheme("light");
-    } else {
-      setTheme("dark");
-    }
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const isDark = theme === "dark";
+
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4">
+    <header
+      className="
+        sticky top-0 z-40
+        flex h-16 items-center justify-between
+        border-b
+        border-[var(--border)]
+        bg-[color:var(--background)]/95
+        px-4
+        backdrop-blur-xl
+        md:px-6
+      "
+    >
       {/* LEFT */}
-      <div className="flex items-center gap-3">
-        <SidebarTrigger />
+      <div className="flex items-center gap-4">
+        <SidebarTrigger
+          className="
+            rounded-lg
+            text-[var(--muted-foreground)]
+            transition-all duration-200
+            hover:bg-[var(--accent)]
+            hover:text-[var(--primary)]
+          "
+        />
 
-        <div className="flex items-center">
-          <img className="w-[50px]" src="/operatorAI.png" alt="OperatorAI" />
+        <div className="hidden h-6 w-px bg-[var(--border)] sm:block" />
 
-          <h2 className="text-[23px] font-[800]">OperatorAI</h2>
+        <div className="flex items-center gap-3">
+          {/* Mobile logo */}
+          <div
+            className="
+              flex h-8 w-8 items-center justify-center
+              rounded-lg
+              border border-[var(--border)]
+              bg-[var(--primary)]/10
+              sm:hidden
+            "
+          >
+            <img
+              src="/operatorAI.png"
+              alt="OperatorAI"
+              className="h-6 w-6 object-contain"
+            />
+          </div>
+
+          <div>
+            <h2
+              className="
+                text-sm font-semibold tracking-tight
+                text-[var(--foreground)]
+                sm:text-[15px]
+              "
+            >
+              OperatorAI
+            </h2>
+
+            <p
+              className="
+                hidden
+                text-[10px]
+                uppercase
+                tracking-[0.15em]
+                text-[var(--muted-foreground)]
+                sm:block
+              "
+            >
+              Business workspace
+            </p>
+          </div>
         </div>
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-2">
-  
-
+      <div className="flex items-center gap-1.5">
+        {/* Theme */}
         <button
           type="button"
           onClick={toggleTheme}
-          className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          className="
+            flex h-9 w-9
+            items-center justify-center
+            rounded-lg
+            text-[var(--muted-foreground)]
+            transition-all duration-200
+            hover:bg-[var(--accent)]
+            hover:text-[var(--primary)]
+          "
           aria-label={
-            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            isDark
+              ? "Switch to light mode"
+              : "Switch to dark mode"
           }
         >
-          {theme === "dark" ? (
-            <Sun className="h-5 w-5" />
+          {isDark ? (
+            <Sun className="h-[18px] w-[18px]" />
           ) : (
-            <Moon className="h-5 w-5" />
+            <Moon className="h-[18px] w-[18px]" />
           )}
         </button>
 
+        {/* Divider */}
+        <div className="mx-1 h-7 w-px bg-[var(--border)]" />
+
+        {/* Profile */}
         <UserProfile />
       </div>
     </header>
