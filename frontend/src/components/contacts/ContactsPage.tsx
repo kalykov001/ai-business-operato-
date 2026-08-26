@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 
@@ -358,13 +358,77 @@ export default function ContactsPage() {
   // LOADING
   // =========================
 
-  if (loading) {
-    return (
-      <div className="p-6 text-gray-900 dark:text-gray-100">
-        <p>Загрузка контактов...</p>
+if (loading) {
+  return (
+    <div className="min-h-screen p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+
+        <Skeleton className="h-10 w-32 rounded-lg" />
       </div>
-    );
-  }
+
+      {/* Search */}
+      <Skeleton className="mb-6 h-11 w-full rounded-lg" />
+
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-border">
+        {/* Table header */}
+        <div className="grid grid-cols-7 gap-4 border-b border-border bg-muted/40 px-4 py-4">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="ml-auto h-4 w-20" />
+        </div>
+
+        {/* Rows */}
+        {Array.from({ length: 7 }).map((_, index) => (
+          <div
+            key={index}
+            className="grid grid-cols-7 items-center gap-4 border-b border-border px-4 py-4 last:border-b-0"
+          >
+            {/* Name */}
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+
+            {/* Company */}
+            <Skeleton className="h-4 w-24" />
+
+            {/* Email */}
+            <Skeleton className="h-4 w-32" />
+
+            {/* Phone */}
+            <Skeleton className="h-4 w-28" />
+
+            {/* Position */}
+            <Skeleton className="h-4 w-24" />
+
+            {/* Status */}
+            <Skeleton className="h-6 w-16 rounded-full" />
+
+            {/* Actions */}
+            <div className="ml-auto flex gap-2">
+              <Skeleton className="h-8 w-16 rounded-md" />
+              <Skeleton className="h-8 w-20 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen p-6 text-gray-900 dark:text-gray-100">

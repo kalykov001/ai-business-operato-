@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   CheckCircle2,
   Circle,
@@ -94,7 +95,66 @@ const isToday = (date: string | null) => {
     taskDate.getFullYear() === today.getFullYear()
   );
 };
+const TaskSkeleton = () => {
+  return (
+    <div className="flex items-center gap-4 px-5 py-4">
+      {/* Checkbox */}
+      <Skeleton className="h-[21px] w-[21px] shrink-0 rounded-full" />
 
+      {/* Task info */}
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
+
+      {/* Status */}
+      <Skeleton className="hidden h-6 w-20 rounded-full sm:block" />
+
+      {/* Delete */}
+      <Skeleton className="h-8 w-8 rounded-md" />
+
+      {/* Priority */}
+      <Skeleton className="hidden h-4 w-14 sm:block" />
+
+      {/* Date */}
+      <Skeleton className="hidden h-4 w-20 md:block" />
+    </div>
+  );
+};
+
+const TasksSkeleton = () => {
+  return (
+    <div className="space-y-6">
+      {/* Today */}
+      <div className="rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="mt-2 h-3 w-20" />
+        </div>
+
+        <div className="divide-y">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <TaskSkeleton key={index} />
+          ))}
+        </div>
+      </div>
+
+      {/* Upcoming */}
+      <div className="rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="mt-2 h-3 w-36" />
+        </div>
+
+        <div className="divide-y">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <TaskSkeleton key={index} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 const TasksPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,238 +390,325 @@ const deleteTask = async (taskId: string) => {
 
       {/* Content */}
 
-      <main className="flex-1 p-6">
-        {/* Search / filters */}
+     <main className="flex-1 p-6">
+  {/* Search / filters */}
+  <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="flex w-full max-w-md items-center gap-2 rounded-lg border bg-background px-3 py-2">
+      <Search size={18} className="text-muted-foreground" />
 
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex w-full max-w-md items-center gap-2 rounded-lg border bg-background px-3 py-2">
-            <Search size={18} className="text-muted-foreground" />
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search tasks..."
+        className="w-full bg-transparent text-sm outline-none"
+      />
+    </div>
 
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks..."
-              className="w-full bg-transparent text-sm outline-none"
-            />
-          </div>
+    <div className="flex items-center gap-2 overflow-x-auto">
+      <button
+        onClick={() => setFilter("all")}
+        className={`rounded-lg border px-3 py-2 text-sm ${
+          filter === "all"
+            ? "bg-muted font-medium"
+            : "hover:bg-muted"
+        }`}
+      >
+        All
+      </button>
 
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <button
-              onClick={() => setFilter("all")}
-              className={`rounded-lg border px-3 py-2 text-sm ${
-                filter === "all" ? "bg-muted font-medium" : "hover:bg-muted"
-              }`}
-            >
-              All
-            </button>
+      <button
+        onClick={() => setFilter("todo")}
+        className={`rounded-lg border px-3 py-2 text-sm ${
+          filter === "todo"
+            ? "bg-muted font-medium"
+            : "hover:bg-muted"
+        }`}
+      >
+        Todo
+      </button>
 
-            <button
-              onClick={() => setFilter("todo")}
-              className={`rounded-lg border px-3 py-2 text-sm ${
-                filter === "todo" ? "bg-muted font-medium" : "hover:bg-muted"
-              }`}
-            >
-              Todo
-            </button>
+      <button
+        onClick={() => setFilter("in_progress")}
+        className={`rounded-lg border px-3 py-2 text-sm ${
+          filter === "in_progress"
+            ? "bg-muted font-medium"
+            : "hover:bg-muted"
+        }`}
+      >
+        In progress
+      </button>
 
-            <button
-              onClick={() => setFilter("in_progress")}
-              className={`rounded-lg border px-3 py-2 text-sm ${
-                filter === "in_progress"
-                  ? "bg-muted font-medium"
-                  : "hover:bg-muted"
-              }`}
-            >
-              In progress
-            </button>
+      <button className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+        <ListFilter size={16} />
+        Filter
+      </button>
+    </div>
+  </div>
 
-            <button className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
-              <ListFilter size={16} />
-              Filter
-            </button>
-          </div>
+  {/* Loading */}
+  {loading ? (
+    <div className="space-y-6">
+      {/* Today Skeleton */}
+      <div className="rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="mt-2 h-3 w-20" />
         </div>
 
-        {/* Today */}
+        <div className="divide-y">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-4 px-5 py-4"
+            >
+              {/* Checkbox */}
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded-full" />
 
-        <div className="rounded-xl border bg-card">
-          <div className="border-b px-5 py-4">
-            <h2 className="font-semibold">Today</h2>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              {todayTasks.length} {todayTasks.length === 1 ? "task" : "tasks"}
-            </p>
-          </div>
-
-          <div className="divide-y">
-            {loading ? (
-              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                Loading tasks...
+              {/* Task info */}
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-3/4" />
               </div>
-            ) : todayTasks.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                No tasks for today
+
+              {/* Status */}
+              <Skeleton className="hidden h-6 w-20 rounded-full sm:block" />
+
+              {/* Delete */}
+              <Skeleton className="h-8 w-8 rounded-md" />
+
+              {/* Priority */}
+              <Skeleton className="hidden h-4 w-14 sm:block" />
+
+              {/* Date */}
+              <Skeleton className="hidden h-4 w-20 md:block" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Upcoming Skeleton */}
+      <div className="rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="mt-2 h-3 w-36" />
+        </div>
+
+        <div className="divide-y">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-4 px-5 py-4"
+            >
+              {/* Checkbox */}
+              <Skeleton className="h-[21px] w-[21px] shrink-0 rounded-full" />
+
+              {/* Task info */}
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-3/4" />
               </div>
-            ) : (
-              todayTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/40"
+
+              {/* Status */}
+              <Skeleton className="hidden h-6 w-20 rounded-full sm:block" />
+
+              {/* Delete */}
+              <Skeleton className="h-8 w-8 rounded-md" />
+
+              {/* Priority */}
+              <Skeleton className="hidden h-4 w-14 sm:block" />
+
+              {/* Date */}
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <>
+      {/* Today */}
+      <div className="rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <h2 className="font-semibold">Today</h2>
+
+          <p className="mt-1 text-xs text-muted-foreground">
+            {todayTasks.length}{" "}
+            {todayTasks.length === 1 ? "task" : "tasks"}
+          </p>
+        </div>
+
+        <div className="divide-y">
+          {todayTasks.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+              No tasks for today
+            </div>
+          ) : (
+            todayTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/40"
+              >
+                {/* Checkbox */}
+                <button
+                  onClick={() => toggleTask(task)}
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
                 >
-                  {/* Checkbox */}
+                  {task.status === "done" ? (
+                    <CheckCircle2 size={21} />
+                  ) : (
+                    <Circle size={21} />
+                  )}
+                </button>
 
-                  <button
-                    onClick={() => toggleTask(task)}
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
-                  >
-                    {task.status === "done" ? (
-                      <CheckCircle2 size={21} />
-                    ) : (
-                      <Circle size={21} />
-                    )}
-                  </button>
-
-                  {/* Task info */}
-
-                  <div className="min-w-0 flex-1">
-                    <h3
-                      className={`truncate text-sm font-medium ${
-                        task.status === "done"
-                          ? "text-muted-foreground line-through"
-                          : ""
-                      }`}
-                    >
-                      {task.title}
-                    </h3>
-
-                    {task.description && (
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Status */}
-
-                  <span className="hidden rounded-full bg-muted px-3 py-1 text-xs sm:block">
-                    {formatStatus(task.status)}
-                  </span>
-<button
-  onClick={() => deleteTask(task.id)}
-  className="rounded-md p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-  title="Delete task"
->
-  <Trash2 size={16} />
-</button>
-                  {/* Priority */}
-
-                  <span
-                    className={`hidden text-xs font-medium sm:block ${
-                      task.priority === "high"
-                        ? "text-destructive"
-                        : task.priority === "medium"
-                          ? "text-yellow-600 dark:text-yellow-400"
-                          : "text-muted-foreground"
+                {/* Task info */}
+                <div className="min-w-0 flex-1">
+                  <h3
+                    className={`truncate text-sm font-medium ${
+                      task.status === "done"
+                        ? "text-muted-foreground line-through"
+                        : ""
                     }`}
                   >
-                    {formatPriority(task.priority)}
-                  </span>
+                    {task.title}
+                  </h3>
 
-                  {/* Date */}
-
-                  <div className="hidden items-center gap-1 text-xs text-muted-foreground md:flex">
-                    <Clock3 size={14} />
-                    {formatDate(task.due_date)}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Upcoming */}
-
-        <div className="mt-6 rounded-xl border bg-card">
-          <div className="border-b px-5 py-4">
-            <h2 className="font-semibold">Upcoming</h2>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Tasks scheduled for later
-            </p>
-          </div>
-
-          <div className="divide-y">
-            {upcomingTasks.length === 0 ? (
-              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
-                No upcoming tasks
-              </div>
-            ) : (
-              upcomingTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/40"
-                >
-                  <button
-                    onClick={() => toggleTask(task)}
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
-                  >
-                    {task.status === "done" ? (
-                      <CheckCircle2 size={21} />
-                    ) : (
-                      <Circle size={21} />
-                    )}
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className={`truncate text-sm font-medium ${
-                        task.status === "done"
-                          ? "text-muted-foreground line-through"
-                          : ""
-                      }`}
-                    >
-                      {task.title}
+                  {task.description && (
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {task.description}
                     </p>
+                  )}
+                </div>
 
-                    {task.description && (
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
+                {/* Status */}
+                <span className="hidden rounded-full bg-muted px-3 py-1 text-xs sm:block">
+                  {formatStatus(task.status)}
+                </span>
 
-                  <span className="hidden rounded-full bg-muted px-3 py-1 text-xs sm:block">
-                    {formatStatus(task.status)}
-                  </span>
-<button
-  onClick={() => deleteTask(task.id)}
-  className="rounded-md p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-  title="Delete task"
->
-  <Trash2 size={16} />
-</button>
-                  <span
-                    className={`hidden text-xs font-medium sm:block ${
-                      task.priority === "high"
-                        ? "text-destructive"
-                        : task.priority === "medium"
-                          ? "text-yellow-600 dark:text-yellow-400"
-                          : "text-muted-foreground"
+                {/* Delete */}
+                <button
+                  onClick={() => deleteTask(task.id)}
+                  className="rounded-md p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                  title="Delete task"
+                >
+                  <Trash2 size={16} />
+                </button>
+
+                {/* Priority */}
+                <span
+                  className={`hidden text-xs font-medium sm:block ${
+                    task.priority === "high"
+                      ? "text-destructive"
+                      : task.priority === "medium"
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {formatPriority(task.priority)}
+                </span>
+
+                {/* Date */}
+                <div className="hidden items-center gap-1 text-xs text-muted-foreground md:flex">
+                  <Clock3 size={14} />
+                  {formatDate(task.due_date)}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Upcoming */}
+      <div className="mt-6 rounded-xl border bg-card">
+        <div className="border-b px-5 py-4">
+          <h2 className="font-semibold">Upcoming</h2>
+
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tasks scheduled for later
+          </p>
+        </div>
+
+        <div className="divide-y">
+          {upcomingTasks.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+              No upcoming tasks
+            </div>
+          ) : (
+            upcomingTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/40"
+              >
+                {/* Checkbox */}
+                <button
+                  onClick={() => toggleTask(task)}
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                >
+                  {task.status === "done" ? (
+                    <CheckCircle2 size={21} />
+                  ) : (
+                    <Circle size={21} />
+                  )}
+                </button>
+
+                {/* Task info */}
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`truncate text-sm font-medium ${
+                      task.status === "done"
+                        ? "text-muted-foreground line-through"
+                        : ""
                     }`}
                   >
-                    {formatPriority(task.priority)}
-                  </span>
+                    {task.title}
+                  </p>
 
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock3 size={14} />
-                    {formatDate(task.due_date)}
-                  </div>
+                  {task.description && (
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {task.description}
+                    </p>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
+
+                {/* Status */}
+                <span className="hidden rounded-full bg-muted px-3 py-1 text-xs sm:block">
+                  {formatStatus(task.status)}
+                </span>
+
+                {/* Delete */}
+                <button
+                  onClick={() => deleteTask(task.id)}
+                  className="rounded-md p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                  title="Delete task"
+                >
+                  <Trash2 size={16} />
+                </button>
+
+                {/* Priority */}
+                <span
+                  className={`hidden text-xs font-medium sm:block ${
+                    task.priority === "high"
+                      ? "text-destructive"
+                      : task.priority === "medium"
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {formatPriority(task.priority)}
+                </span>
+
+                {/* Date */}
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock3 size={14} />
+                  {formatDate(task.due_date)}
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </main>
+      </div>
+    </>
+  )}
+</main>
 
       {/* Create Task Modal */}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Folder,
   File,
@@ -25,7 +25,34 @@ type DriveFile = {
   size?: string;
   iconLink?: string;
 };
+const DriveSkeleton = () => {
+  return (
+    <div className="grid gap-4 px-6 pb-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-lg border p-4"
+        >
+          {/* icon + menu */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-8 rounded-md" />
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
 
+          {/* file info */}
+          <div className="mt-4 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+
+          {/* open */}
+          <Skeleton className="mt-4 h-3 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+};
 const DrivePage = () => {
   const [files, setFiles] = useState<DriveFile[]>([]);
   const [search, setSearch] = useState("");
@@ -151,14 +178,7 @@ const DrivePage = () => {
 
       {/* Loading */}
 
-      {loading && (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading Drive files...
-          </div>
-        </div>
-      )}
+     {loading && <DriveSkeleton />}
 
       {/* Error */}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   FileText,
   Plus,
@@ -20,7 +21,75 @@ type Note = {
   created_at: string;
   updated_at: string;
 };
+const NotesSkeleton = () => {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar skeleton */}
+        <aside className="w-[320px] border-r">
+          {/* Search */}
+          <div className="border-b p-4">
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
 
+          {/* Notes list */}
+          <div className="space-y-1 p-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-3 rounded-lg p-4"
+              >
+                <Skeleton className="mt-1 h-[18px] w-[18px] shrink-0 rounded" />
+
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        {/* Editor skeleton */}
+        <main className="flex-1">
+          <div className="flex h-full flex-col">
+            {/* Editor header */}
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-16 rounded-lg" />
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <Skeleton className="h-9 w-9 rounded-lg" />
+              </div>
+            </div>
+
+            {/* Editor content */}
+            <div className="flex-1 p-8">
+              <Skeleton className="mb-6 h-10 w-2/3" />
+
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-[95%]" />
+                <Skeleton className="h-4 w-[88%]" />
+                <Skeleton className="h-4 w-[92%]" />
+                <Skeleton className="h-4 w-3/4" />
+
+                <Skeleton className="mt-8 h-4 w-[90%]" />
+                <Skeleton className="h-4 w-[82%]" />
+                <Skeleton className="h-4 w-[70%]" />
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
 const NotesPage = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -373,54 +442,123 @@ const NotesPage = () => {
 
           {/* NOTES LIST */}
 
-          <div className="overflow-y-auto">
-            {loading ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                Loading notes...
-              </div>
-            ) : filteredNotes.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No notes found
-              </div>
-            ) : (
-              filteredNotes.map((note) => (
-                <button
-                  key={note.id}
-                  onClick={() =>
-                    setSelectedNote(note)
-                  }
-                  className={`w-full border-b p-4 text-left transition ${
-                    selectedNote?.id === note.id
-                      ? "bg-muted"
-                      : "hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <FileText
-                      size={18}
-                      className="mt-1 shrink-0 text-muted-foreground"
-                    />
+        <div className="overflow-y-auto">
+  {loading ? (
+    <div className="space-y-1 p-2">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-start gap-3 rounded-lg p-4"
+        >
+          {/* Icon */}
+          <Skeleton className="mt-1 h-[18px] w-[18px] shrink-0 rounded" />
 
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {note.title}
-                      </p>
-
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {note.content || "Empty note"}
-                      </p>
-
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {new Date(
-                          note.updated_at,
-                        ).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
+          {/* Text */}
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-1/2" />
           </div>
+        </div>
+      ))}
+    </div>
+  ) : filteredNotes.length === 0 ? (
+    <div className="p-6 text-center text-sm text-muted-foreground">
+      No notes found
+    </div>
+  ) : (
+    filteredNotes.map((note) => (
+      <button
+        key={note.id}
+        onClick={() => setSelectedNote(note)}
+        className={`w-full border-b p-4 text-left transition ${
+          selectedNote?.id === note.id
+            ? "bg-muted"
+            : "hover:bg-muted/50"
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <FileText
+            size={18}
+            className="mt-1 shrink-0 text-muted-foreground"
+          />
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">
+              {note.title}
+            </p>
+
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {note.content || "Empty note"}
+            </p>
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              {new Date(note.updated_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </button>
+    ))
+  )}
+</div><div className="overflow-y-auto">
+  {loading ? (
+    <div className="space-y-1 p-2">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div
+          key={index}
+          className="flex items-start gap-3 rounded-lg p-4"
+        >
+          {/* Icon */}
+          <Skeleton className="mt-1 h-[18px] w-[18px] shrink-0 rounded" />
+
+          {/* Text */}
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : filteredNotes.length === 0 ? (
+    <div className="p-6 text-center text-sm text-muted-foreground">
+      No notes found
+    </div>
+  ) : (
+    filteredNotes.map((note) => (
+      <button
+        key={note.id}
+        onClick={() => setSelectedNote(note)}
+        className={`w-full border-b p-4 text-left transition ${
+          selectedNote?.id === note.id
+            ? "bg-muted"
+            : "hover:bg-muted/50"
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <FileText
+            size={18}
+            className="mt-1 shrink-0 text-muted-foreground"
+          />
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">
+              {note.title}
+            </p>
+
+            <p className="mt-1 truncate text-xs text-muted-foreground">
+              {note.content || "Empty note"}
+            </p>
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              {new Date(note.updated_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </button>
+    ))
+  )}
+</div>
         </aside>
 
         {/* EDITOR */}
