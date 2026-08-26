@@ -26,6 +26,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import DashboardSkeleton from "@/shared/ui/DashboardSkeleton";
 
 type Task = {
   id: string;
@@ -57,7 +58,6 @@ function formatDueDate(date: string | null) {
     day: "numeric",
   });
 }
-
 export default function Home() {
   const router = useRouter();
 
@@ -113,6 +113,10 @@ export default function Home() {
   );
 
   const firstName = userName.split(" ")[0];
+
+  if (loading) {
+    return <DashboardSkeleton />;
+}
 
   return (
     <SidebarProvider>
