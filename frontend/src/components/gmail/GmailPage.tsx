@@ -8,6 +8,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search,
   X,
@@ -246,11 +247,36 @@ export default function GmailPage() {
       {/* Gmail list */}
 
       <div className="space-y-2">
-        {loading ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Loading emails...
+      {loading ? (
+  <div className="space-y-2">
+    {Array.from({ length: 7 }).map((_, index) => (
+      <div
+        key={index}
+        className="w-full rounded-lg border p-4"
+      >
+        <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <Skeleton className="mt-1 h-9 w-9 shrink-0 rounded-full" />
+
+          <div className="min-w-0 flex-1">
+            {/* Sender + date */}
+            <div className="flex items-center justify-between gap-4">
+              <Skeleton className="h-4 w-40 rounded-md" />
+              <Skeleton className="h-3 w-16 rounded-md" />
+            </div>
+
+            {/* Subject */}
+            <Skeleton className="mt-2 h-4 w-3/5 rounded-md" />
+
+            {/* Message */}
+            <Skeleton className="mt-2 h-3 w-full rounded-md" />
+            <Skeleton className="mt-1 h-3 w-4/5 rounded-md" />
           </div>
-        ) : filteredEmails.length === 0 ? (
+        </div>
+      </div>
+    ))}
+  </div>
+) : filteredEmails.length === 0 ? (
           <div className="rounded-lg border py-10 text-center">
             <Mail className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
 
