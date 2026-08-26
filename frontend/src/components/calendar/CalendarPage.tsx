@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ChevronLeft,
   ChevronRight,
@@ -439,14 +439,106 @@ export function CalendarPage() {
   // =====================================
 
   if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center bg-background">
-        <div className="text-sm text-muted-foreground">
-          Loading calendar...
+  return (
+    <div className="min-h-full w-full bg-background text-foreground">
+      {/* Header Skeleton */}
+      <header className="flex flex-col gap-4 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-28" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-9 w-36 rounded-lg" />
+          <Skeleton className="h-9 w-16 rounded-lg" />
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+      </header>
+
+      {/* Days Skeleton */}
+      <div className="grid grid-cols-[60px_repeat(7,minmax(100px,1fr))] overflow-hidden border-b border-border bg-card">
+        <div />
+
+        {Array.from({ length: 7 }).map((_, index) => (
+          <div
+            key={index}
+            className="border-l border-border py-3"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Skeleton className="h-3 w-8" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Skeleton */}
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[760px] grid-cols-[60px_repeat(7,minmax(100px,1fr))]">
+          {/* Hours */}
+          <div className="bg-muted/20">
+            {Array.from({ length: 24 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex h-10 items-start justify-end border-b border-border pr-2 pt-1"
+              >
+                <Skeleton className="h-3 w-7" />
+              </div>
+            ))}
+          </div>
+
+          {/* Days */}
+          {Array.from({ length: 7 }).map((_, dayIndex) => (
+            <div
+              key={dayIndex}
+              className="relative border-l border-border bg-background"
+            >
+              {Array.from({ length: 24 }).map((_, hourIndex) => (
+                <div
+                  key={hourIndex}
+                  className="h-10 border-b border-border"
+                />
+              ))}
+
+              {/* Fake events */}
+              {dayIndex === 1 && (
+                <Skeleton
+                  className="absolute left-1 right-1 rounded-lg"
+                  style={{
+                    top: "120px",
+                    height: "36px",
+                  }}
+                />
+              )}
+
+              {dayIndex === 3 && (
+                <Skeleton
+                  className="absolute left-1 right-1 rounded-lg"
+                  style={{
+                    top: "280px",
+                    height: "36px",
+                  }}
+                />
+              )}
+
+              {dayIndex === 5 && (
+                <Skeleton
+                  className="absolute left-1 right-1 rounded-lg"
+                  style={{
+                    top: "440px",
+                    height: "36px",
+                  }}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // =====================================
   // UI
